@@ -10,12 +10,19 @@
 </head>
 <body><main>
   <h1>下载嘉利采购分析 HTML</h1>
-  <p>点击下方按钮，保存为 <strong>.html 文件</strong>。下载后可用 Chrome 或 Edge 离线打开；数据、图表及图片均包含在文件内，外部资料连结需联网。</p>
+  <p>点击下方按钮，保存为 <strong>.html 文件</strong>。下载后可用 Chrome 或 Edge 离线打开；完整下载会先汇集所需数据，生成可离线使用的单文件；准备时需联网，外部资料链接也需联网。</p>
 <section class="card">
     <h2>完整采购 Fact Book</h2>
     <p>包含 01—07 全部板块。03 采购协同采用双方 2026/01—2026/08 的嘉利 PO／得邦入库比较。</p>
-    <a class="download" id="downloadFull" href="index.html?v=single-po-20261110" download="嘉利采购_Fact_Book.html">下载完整 Fact Book.html</a><span class="size">约 42.3 MB</span>
-  </section>
-  <footer><a href="index.html?v=single-po-20261110">返回线上分析页面</a></footer>
-</main></body>
+    <a class="download" id="downloadFull" href="index.html?v=po-lazy-20261110" >下载完整 Fact Book.html</a><span class="size">离线文件约 42.4 MB</span>
+  <p id="downloadStatus" role="status" aria-live="polite"></p></section>
+  <footer><a href="index.html?v=po-lazy-20261110">返回线上分析页面</a></footer>
+</main><script>document.getElementById('downloadFull').addEventListener('click',async event=>{
+ event.preventDefault();const button=event.currentTarget,status=document.getElementById('downloadStatus');if(button.getAttribute('aria-disabled')==='true')return;button.setAttribute('aria-disabled','true');status.textContent='正在准备完整离线文件…';
+ try{const response=await fetch('index.html?v=po-lazy-20261110');if(!response.ok)throw new Error('页面读取失败');const html=await response.text(),doc=new DOMParser().parseFromString(html,'text/html'),manifest=JSON.parse(doc.getElementById('poAssetManifest').textContent),files={},queue=[...manifest.files];let complete=0;
+ async function worker(){while(queue.length){const name=queue.shift(),r=await fetch(name);if(!r.ok)throw new Error('数据读取失败：'+name);const bytes=new Uint8Array(await r.arrayBuffer());let binary='';for(let i=0;i<bytes.length;i+=32768)binary+=String.fromCharCode(...bytes.subarray(i,i+32768));files[name]=btoa(binary);status.textContent='正在准备完整离线文件：'+(++complete)+'/'+manifest.files.length;}}
+ await Promise.all(Array.from({length:6},worker));const end=html.lastIndexOf('</body>'),output=html.slice(0,end)+'<script id="poOfflineFiles" type="application/json">'+JSON.stringify(files)+'</scr'+'ipt>'+html.slice(end),url=URL.createObjectURL(new Blob([output],{type:'text/html;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='嘉利采购_Fact_Book.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='完整离线文件已准备好，请保存。';
+ }catch(e){status.textContent='下载未完成，请重试。'+e.message;}finally{button.removeAttribute('aria-disabled');}
+});
+</script></body>
 </html>
